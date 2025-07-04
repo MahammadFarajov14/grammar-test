@@ -1,6 +1,7 @@
 from blog.api.serializers import CommentSerializer, PostSerializer, PostShareSerializer, PostFilterSerializer
 from blog.models import Comment, Post
 from rest_framework.generics import ListCreateAPIView, DestroyAPIView, RetrieveUpdateAPIView, ListCreateAPIView, RetrieveAPIView, RetrieveDestroyAPIView
+from rest_framework.views import APIView
 from django.http import JsonResponse
 from rest_framework.filters import OrderingFilter
 from django.db.models import Count
@@ -14,7 +15,7 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 from rest_framework.response import Response
 from grammar.utils import get_user_form_jwt
-
+from rest_framework import status
 
 class NotificationsAPIView(ListCreateAPIView):
     serializer_class = NotificationSerializer
@@ -95,6 +96,16 @@ class PostRetrieveUpdateAPIView(RetrieveUpdateAPIView):
 class PostShareRetrieveUpdateAPIView(RetrieveAPIView):
     serializer_class = PostShareSerializer
     queryset = Post.objects.all()
+
+class PostLikeAPIView(APIView):
+    def post(self, request, pk):
+        try:
+            post = Post.objects.get(pk=pk)
+            post.like += 1
+            post.save()
+            return Response({'likes': post.likes}, status=status.HTTP_200_OK)
+        except Post.DoesNotExist:
+            return Response({'error': 'Post not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
 class PostCreateAPIView(ListCreateAPIView):
